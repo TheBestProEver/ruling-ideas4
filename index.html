@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruling Ideas: a game on Marx</title>
+<meta name="description" content="Trivia presenter for Ruling Ideas, a classroom game on the Theses on Feuerbach and the Communist Manifesto.">
+<style>
+:root {
+  --bg: #EFEAEA;
+  --card: #FFFFFF;
+  --ink: #1E1E1E;
+  --muted: #5A5A5A;
+  --line: #8A8A8A;
+  --soft: #D9CFCF;
+  --tint: #F6EFEF;
+  --rule: #9B1D20;
+  --rule-text: #9B1D20;
+  --navy: #2F3E46;
+  --sand: #8C6A3F;
+  --t1: #D7263D; --t2: #1B6CA8; --t3: #2A9D5C; --t4: #F4B400;
+  --focus: #1B6CA8;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1F1A1A; --card: #2A2323; --ink: #F2ECEC; --muted: #B9AEAE;
+    --line: #8A7C7C; --soft: #4A3D3D; --tint: #3A2B2B; --rule-text: #F07A7D; --focus: #7FB8E6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1F1A1A; --card: #2A2323; --ink: #F2ECEC; --muted: #B9AEAE;
+  --line: #8A7C7C; --soft: #4A3D3D; --tint: #3A2B2B; --rule-text: #F07A7D; --focus: #7FB8E6;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100dvh;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* ---------- top bar ---------- */
+.bar {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px clamp(12px, 3vw, 28px);
+  border-bottom: 2px dashed var(--soft);
+}
+.brand { background: none; border: 0; padding: 0; font-weight: 800; font-size: 1.25rem; color: var(--rule-text); }
+.where { color: var(--muted); font-size: .98rem; }
+.state { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1.5px solid var(--soft); background: var(--card);
+  border-radius: 999px; padding: 6px 12px; font-size: .9rem;
+}
+.chip .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.chip[hidden] { display: none; }
+.iconbtn { border: 1.5px solid var(--soft); background: var(--card); border-radius: 999px; padding: 6px 12px; font-size: .9rem; }
+
+/* ---------- stage ---------- */
+main {
+  display: flex;
+  padding: clamp(14px, 3vw, 36px) clamp(12px, 3vw, 36px);
+  overflow-y: auto;
+}
+main > * { margin: auto; }
+.card {
+  width: min(1040px, 100%);
+  background: var(--card);
+  border: 2.5px dashed var(--line);
+  border-radius: 6px;
+  padding: clamp(14px, 2vw, 22px);
+}
+.band {
+  background: var(--band, var(--rule)); color: var(--band-ink, #fff);
+  border-radius: 12px; padding: .55em 1em;
+  font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: .03em;
+  font-size: clamp(.95rem, 1.5vw, 1.25rem);
+}
+.inner { padding: clamp(14px, 2.6vw, 30px) clamp(8px, 2vw, 24px) clamp(6px, 1vw, 12px); text-align: center; }
+.prompt {
+  font-weight: 700; font-size: clamp(1.45rem, 3vw, 2.65rem); line-height: 1.22;
+  margin: 0 auto; max-width: 30ch; text-wrap: balance;
+}
+.prompt.long { font-size: clamp(1.25rem, 2.4vw, 2.1rem); max-width: 36ch; }
+.sub { color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); line-height: 1.45; max-width: 60ch; margin: 12px auto 0; }
+.blank {
+  display: inline-block; min-width: 4.2ch; border-bottom: .1em solid currentColor;
+  margin: 0 .12em; line-height: 1.1;
+}
+.blank.filled { color: var(--rule-text); border-color: var(--rule-text); }
+
+.options { list-style: none; padding: 0; margin: clamp(18px, 3vw, 32px) auto 0; display: grid; gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); max-width: 900px; }
+.options li {
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  border: 2px solid var(--soft); border-radius: 12px; padding: 14px 16px;
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem); font-weight: 600;
+  transition: opacity .25s ease, background-color .25s ease;
+}
+.options .letter {
+  flex: none; width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center;
+  background: var(--tint); color: var(--rule-text); font-weight: 800;
+}
+.options.revealed li { opacity: .4; }
+.options.revealed li.correct { opacity: 1; background: var(--rule); border-color: var(--rule); color: #fff; }
+.options.revealed li.correct .letter { background: #fff; color: var(--rule); }
+
+.answer {
+  margin: clamp(16px, 2.6vw, 26px) auto 0; max-width: 62ch; text-align: left;
+  border-top: 2px dashed var(--soft); padding-top: 14px;
+  font-size: clamp(1.05rem, 1.7vw, 1.35rem); line-height: 1.45;
+  animation: open .3s ease;
+}
+.answer strong { color: var(--rule-text); }
+.answer .why { color: var(--muted); font-style: italic; margin: 8px 0 0; }
+@keyframes open { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- title ---------- */
+.title-wrap { text-align: center; }
+.title-wrap h1 {
+  margin: 0; color: var(--rule-text); font-weight: 800; letter-spacing: -.02em;
+  font-size: clamp(3.2rem, 11vw, 8.5rem); line-height: .95;
+}
+.title-wrap p { font-size: clamp(1.1rem, 2.2vw, 1.6rem); color: var(--muted); max-width: 32ch; margin: 18px auto 0; line-height: 1.35; }
+.shapes { display: flex; justify-content: center; gap: clamp(14px, 3vw, 28px); margin: 30px 0 8px; }
+.shape { width: clamp(38px, 6vw, 60px); height: clamp(38px, 6vw, 60px); }
+.s1 { background: var(--t1); border-radius: 50%; }
+.s2 { background: var(--t2); border-radius: 4px; }
+.s3 { background: var(--t3); clip-path: polygon(50% 4%, 100% 92%, 0 92%); }
+.s4 { background: var(--t4); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  border: 2px solid var(--ink); background: transparent; border-radius: 10px;
+  padding: 10px 18px; font-weight: 700; font-size: 1rem;
+}
+a.btn { text-decoration: none; display: inline-block; }
+.btn.primary { background: var(--rule); border-color: var(--rule); color: #fff; }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ---------- grids of cards ---------- */
+.grid { display: grid; gap: 16px; width: min(1180px, 100%); }
+.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .grid.two { grid-template-columns: 1fr; } }
+.grid.three { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.mini { padding: 12px; }
+.mini .inner { padding: 14px 8px 6px; }
+.mini h3 { margin: 0 0 6px; font-size: clamp(1.15rem, 1.8vw, 1.45rem); }
+.mini p { margin: 6px 0; line-height: 1.4; font-size: clamp(.95rem, 1.3vw, 1.08rem); }
+.mini .from { color: var(--muted); font-style: italic; font-size: .92rem; }
+.mini .learn { color: var(--muted); font-style: italic; font-size: .93rem; }
+.mini.ruling { border-color: var(--rule); border-style: solid; }
+.flag { display: inline-block; margin-top: 8px; background: var(--rule); color: #fff; border-radius: 999px; padding: 4px 12px; font-size: .85rem; font-weight: 700; }
+.pick { text-align: center; width: 100%; background: var(--card); }
+.pick[aria-pressed="true"] { outline: 4px solid var(--ink); outline-offset: 3px; }
+
+.heading { text-align: center; margin: 0 0 18px; }
+.heading h2 { margin: 0; font-size: clamp(1.8rem, 4vw, 3rem); color: var(--rule-text); }
+.heading p { margin: 8px auto 0; color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.2rem); max-width: 60ch; }
+.stack { display: grid; gap: 18px; justify-items: center; width: 100%; }
+
+/* ---------- rules ---------- */
+.rules { columns: 2 340px; column-gap: 34px; text-align: left; }
+.rules section { break-inside: avoid; margin-bottom: 14px; }
+.rules h3 { margin: 0 0 6px; color: var(--rule-text); font-size: 1.1rem; }
+.rules ol { margin: 0; padding-left: 1.7em; }
+.rules li { margin: 0 0 6px; line-height: 1.42; font-size: 1rem; }
+
+/* ---------- auction ---------- */
+.auction { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 22px; }
+.wage { text-align: center; }
+.wage .num { font-size: clamp(3rem, 7vw, 5rem); font-weight: 800; color: var(--rule-text); line-height: 1; }
+.wage .lbl { color: var(--muted); }
+
+/* ---------- debrief ---------- */
+.tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+.tabs button { border: 2px solid var(--soft); background: var(--card); border-radius: 999px; padding: 8px 16px; font-weight: 700; }
+.tabs button[aria-pressed="true"] { background: var(--rule); border-color: var(--rule); color: #fff; }
+table { width: 100%; border-collapse: collapse; margin-top: 18px; text-align: left; font-size: clamp(.9rem, 1.2vw, 1.02rem); }
+th { background: var(--rule); color: #fff; padding: 8px 10px; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--soft); vertical-align: top; }
+tr:nth-child(even) td { background: var(--tint); }
+td:last-child { color: var(--muted); white-space: nowrap; }
+
+/* ---------- controls ---------- */
+.controls { position: relative; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px clamp(12px, 3vw, 28px) 14px; border-top: 2px dashed var(--soft); }
+.timerbar { position: absolute; left: 0; right: 0; top: -2px; height: 6px; }
+.timerbar span { display: block; height: 100%; width: 0; background: var(--rule); }
+.count { color: var(--muted); font-variant-numeric: tabular-nums; margin: 0 auto; }
+.keys { color: var(--muted); font-size: .85rem; }
+
+/* ---------- countdown takeover ---------- */
+.countdown { position: fixed; inset: 0; background: var(--rule); color: #fff; display: grid; place-items: center; z-index: 20; text-align: center; }
+.countdown[hidden] { display: none; }
+.countdown .big { font-size: clamp(9rem, 32vw, 24rem); font-weight: 800; line-height: 1; }
+.countdown .msg { font-size: clamp(2.2rem, 7vw, 5rem); font-weight: 800; padding: 0 20px; }
+.pop { animation: pop .35s ease; }
+@keyframes pop { from { transform: scale(.7); opacity: .3; } to { transform: none; opacity: 1; } }
+
+/* ---------- menu ---------- */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: grid; place-items: center; z-index: 15; padding: 16px; }
+.overlay[hidden] { display: none; }
+.menu { background: var(--card); border: 2.5px dashed var(--line); border-radius: 6px; padding: 18px; width: min(460px, 100%); max-height: 90dvh; overflow: auto; }
+.menu h2 { margin: 0 0 10px; color: var(--rule-text); }
+.menu button.jump { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--soft); background: none; padding: 11px 4px; font-size: 1.05rem; }
+.menu button.jump:hover { color: var(--rule-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 640px) {
+  .keys { display: none; }
+  .state { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <button class="brand" id="home" type="button">Ruling Ideas</button>
+  <span class="where" id="where"></span>
+  <div class="state">
+    <button class="chip" id="rulerChip" type="button"><span class="dot" id="rulerDot"></span><span id="rulerText">No Ruling Class yet</span></button>
+    <span class="chip" id="ruleChip" hidden></span>
+    <button class="iconbtn" id="menuBtn" type="button">Menu</button>
+    <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch between light and dark">Light / dark</button>
+  </div>
+</header>
+
+<main id="stage" aria-live="polite"></main>
+
+<footer class="controls">
+  <div class="timerbar" aria-hidden="true"><span id="timerFill"></span></div>
+  <button class="btn" id="prev" type="button">Back</button>
+  <button class="btn" id="timerBtn" type="button">Start timer</button>
+  <button class="btn" id="revealBtn" type="button">Show answer</button>
+  <span class="count" id="count"></span>
+  <span class="keys">Keys: arrows move, A shows the answer, T runs the timer</span>
+  <button class="btn primary" id="next" type="button">Next</button>
+</footer>
+
+<div class="countdown" id="countdown" hidden><div id="cdInner"></div></div>
+
+<div class="overlay" id="menu" hidden>
+  <div class="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+    <h2 id="menuTitle">Jump to</h2>
+    <div id="menuList"></div>
+    <div class="row" style="justify-content:flex-start"><button class="btn" id="menuClose" type="button">Close</button></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const D = window.RULING_DATA;
+
+const RULE_CARDS = [
+  { key: "Double Pay", text: "Our right answers earn 2 tokens. Everyone else still earns 1." },
+  { key: "Tax", text: "Every other team pays us 1 token right now. The Banker collects it." }
+];
+
+const state = { i: 0, ruler: null, rule: null, revealed: false, wage: 3, ending: "revolution", timer: null };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const team = (id) => D.teams.find((t) => t.id === id);
+
+/* ---------- slide list ---------- */
+const S = [];
+const add = (s) => S.push(s);
+add({ kind: "title", where: "Start", menu: "Start" });
+add({ kind: "teams", where: "Meet the teams", menu: "Meet the teams" });
+add({ kind: "rules", where: "The rules", menu: "The rules" });
+for (const r of D.rounds) {
+  const where = `Round ${r.n}: ${r.name}`;
+  if (r.n === 2) {
+    add({ kind: "ruler", where: "Who rules?", menu: "Who rules? (after Round 1)" });
+  }
+  add({ kind: "intro", round: r, where, menu: where });
+  if (r.n === 1 || r.n === 2) {
+    if (r.n === 2) add({ kind: "pickrule", where });
+    D.questions.filter((q) => q.round === r.n).forEach((q) => add({ kind: "q", q, where }));
+  }
+  if (r.n === 3) D.hard.slice(0, 2).forEach((q) => add({ kind: "hard", q, where }));
+  if (r.n === 4) {
+    add({ kind: "bribe", where });
+    D.prompts.forEach((q) => add({ kind: "prompt", q, where }));
+  }
+  const dq = D.discussion.find((d) => d.round === r.n);
+  if (dq) add({ kind: "disc", q: dq, where: `Round ${r.n}: discussion` });
+}
+add({ kind: "debrief", where: "Debrief", menu: "Debrief" });
+
+/* ---------- helpers ---------- */
+function blanksIn(text) { return (text.match(/_{3,}/g) || []).length; }
+function fillWords(q) {
+  if (!/fill/i.test(q.type || "")) return null;
+  const n = blanksIn(q.prompt);
+  const words = q.answer.includes(";") ? q.answer.split(";").map((s) => s.trim()) : q.answer.split(/\s+/);
+  return words.length === n ? words : null;
+}
+function promptHTML(q, revealed) {
+  const parts = q.prompt.split(/_{3,}/);
+  const fill = revealed ? fillWords(q) : null;
+  let out = "";
+  parts.forEach((p, k) => {
+    out += esc(p);
+    if (k < parts.length - 1) {
+      const w = fill ? fill[k] : "";
+      out += `<span class="blank${w ? " filled" : ""}">${w ? esc(w) : "&nbsp;"}</span>`;
+    }
+  });
+  return out;
+}
+function card(band, inner, opts = {}) {
+  const style = opts.color ? ` style="--band:${opts.color};--band-ink:${opts.ink || "#fff"}"` : "";
+  return `<article class="card ${opts.cls || ""}"><div class="band"${style}>${esc(band)}</div><div class="inner">${inner}</div></article>`;
+}
+function answerBlock(label, text, why) {
+  return `<div class="answer"><strong>${esc(label)}</strong> ${esc(text)}${why ? `<p class="why">Why it matters: ${esc(why)}</p>` : ""}</div>`;
+}
+function optionsHTML(q, revealed) {
+  if (!q.options) return "";
+  const L = "ABCD";
+  return `<ol class="options${revealed ? " revealed" : ""}">${q.options
+    .map((o, k) => `<li class="${k === q.correct ? "correct" : ""}"><span class="letter">${L[k]}</span><span>${esc(o)}</span></li>`)
+    .join("")}</ol>`;
+}
+
+/* ---------- renderers ---------- */
+const R = {
+  title() {
+    return `<div class="title-wrap">
+      <div class="shapes" aria-hidden="true"><div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div><div class="shape s4"></div></div>
+      <h1>Ruling Ideas</h1>
+      <p>Earn tokens, take power, rewrite the rules, then see if anyone can stop you.</p>
+      <div class="row"><button class="btn primary" data-go="1" type="button">Meet the teams</button><button class="btn" data-go="2" type="button">Read the rules</button><a class="btn" href="Ruling_Ideas_Game_Kit.pdf" download>Print kit (PDF)</a><a class="btn" href="Ruling_Ideas_Currency.pdf" download>Currency (PDF)</a></div>
+    </div>`;
+  },
+  teams() {
+    const cards = D.teams.map((t) => {
+      const ruling = state.ruler === t.id;
+      return `<article class="card mini${ruling ? " ruling" : ""}"><div class="band" style="--band:${t.color};--band-ink:${t.ink}">Team ${t.id}: ${esc(t.name)}</div>
+        <div class="inner"><p class="from">From the ${esc(t.reading)}</p><p>${esc(t.who)}</p>
+        <p class="from">What your reading says:</p><p><strong>${esc(t.learn)}</strong></p>${ruling ? `<span class="flag">Ruling Class now: playing the bourgeoisie</span>` : ""}</div></article>`;
+    }).join("");
+    return `<div class="stack"><div class="heading"><h2>Meet the teams</h2><p>Every team starts with 3 tokens. Whoever becomes the Ruling Class plays the bourgeoisie.</p></div><div class="grid two">${cards}</div></div>`;
+  },
+  rules() {
+    let n = 1;
+    const secs = D.rules.map(([head, items]) => `<section><h3>${esc(head)}</h3><ol start="${n}">${items.map((it) => { n++; return `<li>${esc(it)}</li>`; }).join("")}</ol></section>`).join("");
+    return card("The rules", `<div class="rules">${secs}</div>`, { cls: "wide" });
+  },
+  intro(s) {
+    const r = s.round;
+    return card(`Round ${r.n}: ${r.mins} minutes`, `<p class="prompt">${esc(r.name)}</p><p class="sub">${esc(r.what)}</p>`);
+  },
+  recap(s) {
+    const r = s.round;
+    const line = D.roundLines[r.n - 1];
+    return card(`What Round ${r.n} just showed`, `<p class="prompt long">${esc(r.teaches)}</p><p class="sub">\u201c${esc(line[1])}\u201d</p>`, { color: "var(--navy)" });
+  },
+  ruler() {
+    const t = D.tiebreakers[0];
+    const btns = D.teams.map((tm) => `<button class="card mini pick" type="button" data-ruler="${tm.id}" aria-pressed="${state.ruler === tm.id}">
+      <div class="band" style="--band:${tm.color};--band-ink:${tm.ink}">Team ${tm.id}</div><div class="inner"><h3>${esc(tm.name)}</h3></div></button>`).join("");
+    return `<div class="stack"><div class="heading"><h2>Who rules?</h2><p>The team with the most tokens becomes the Ruling Class. Click it, then hand that team the placard.</p></div>
+      <div class="grid three" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">${btns}</div>
+      ${card("Tie? Closest guess wins", `<p class="prompt long">${esc(t.prompt)}</p>${state.revealed ? answerBlock("Answer:", t.answer, t.why) : ""}`, { color: "var(--navy)" })}</div>`;
+  },
+  pickrule() {
+    const who = state.ruler ? `Team ${state.ruler}, ${team(state.ruler).name}` : "Ruling Class";
+    const cards = RULE_CARDS.map((rc) => `<button class="card mini pick" type="button" data-rule="${rc.key}" aria-pressed="${state.rule === rc.key}">
+      <div class="band">Rule: ${esc(rc.key)}</div><div class="inner"><p style="font-size:clamp(1.05rem,1.6vw,1.3rem);font-weight:700">${esc(rc.text)}</p></div></button>`).join("");
+    const speech = state.rule
+      ? card(`${who}, finish this sentence`, `<p class="prompt">\u201cThis rule is good for everyone because\u2026\u201d</p><p class="sub">30 seconds. Then the Banker enforces it for the rest of the game.</p>`)
+      : "";
+    return `<div class="stack"><div class="heading"><h2>Pick a rule</h2><p>${esc(who)}: choose one card.</p></div><div class="grid three">${cards}</div>${speech}</div>`;
+  },
+  q(s) {
+    const q = s.q;
+    const long = q.prompt.length > 120 ? " long" : "";
+    let inner = `<p class="prompt${long}">${promptHTML(q, state.revealed)}</p>${optionsHTML(q, state.revealed)}`;
+    if (state.revealed) inner += answerBlock("Answer:", q.options ? `${"ABCD"[q.correct]}) ${q.answer}` : q.answer, q.why);
+    return card(`Question ${q.id}: ${q.type}`, inner);
+  },
+  hard(s) {
+    const q = s.q;
+    let inner = `<p class="prompt long">${promptHTML(q, false)}</p>
+      <div class="auction"><div class="wage"><div class="num" id="wageNum">${state.wage}</div><div class="lbl">tokens: wage on offer</div></div>
+      <button class="btn" type="button" id="lower" ${state.wage <= 0 ? "disabled" : ""}>Lower the wage</button>
+      <button class="btn" type="button" id="resetWage">Back to 3</button></div>
+      <p class="sub">The Ruling Class may not answer. Lowest offer gets the job and 30 seconds. If they\u2019re right, the 3 tokens go to the Ruling Class.</p>`;
+    if (state.revealed) inner += answerBlock("Answer:", q.answer);
+    return card(`Hard question ${q.id}: worth 3 to the Ruling Class`, inner, { color: "var(--navy)" });
+  },
+  bribe() {
+    const bribe = `<article class="card mini"><div class="band" style="--band:#333333">Step 1: the Bribe</div><div class="inner"><h3>The Ruling Class may offer 2 tokens to one team</h3><p>If they take it, they sit out. If the revolution fails, they share the Ruling Class\u2019s prize. If it wins, they get nothing.</p><p class="learn">You can rise, but only by joining the rulers.</p></div></article>`;
+    const rev = `<article class="card mini"><div class="band">Step 2: Revolution</div><div class="inner"><h3>Everyone else answers one prompt together</h3><p>One sentence per team. If the Historian says you win, the placard is torn up and you all share the prize.</p><p class="learn">Workers of the world, unite!</p></div></article>`;
+    return `<div class="stack"><div class="heading"><h2>Revolution</h2><p>Will the teams stay united, or will the Ruling Class split them?</p></div><div class="grid two">${bribe}${rev}</div></div>`;
+  },
+  prompt(s) {
+    const q = s.q;
+    let inner = `<p class="prompt long">${esc(q.prompt)}</p><p class="sub">Answer together, one sentence per team. The Historian decides if you win.</p>`;
+    if (state.revealed) inner += answerBlock("A good answer:", q.answer);
+    return card(`Revolution prompt ${q.id} (pick one)`, inner);
+  },
+  disc(s) {
+    const q = s.q;
+    let inner = `<p class="prompt long">${esc(q.prompt)}</p>`;
+    if (state.revealed) inner += answerBlock("Get it started:", q.hint);
+    return card(`Discussion: Round ${q.round}`, inner, { color: "var(--navy)" });
+  },
+  debrief() {
+    const e = D.endings.find((x) => x.key === state.ending);
+    const tabs = D.endings.map((x) => `<button type="button" data-ending="${x.key}" aria-pressed="${x.key === state.ending}">${esc(x.label)}</button>`).join("");
+    const rows = D.debrief.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("");
+    return card("What you just played", `<div class="tabs">${tabs}</div><p class="prompt long" style="margin-top:4px">\u201c${esc(e.line)}\u201d</p>
+      <table><thead><tr><th>What happened</th><th>What it shows</th><th>Source</th></tr></thead><tbody>${rows}</tbody></table>`);
+  },
+  bonusIntro() {
+    return card("Bonus questions", `<p class="prompt">Extra time?</p><p class="sub">Use these to stretch Round 1 or 2, replace a question, or keep playing after the debrief. Spare hard questions and tiebreakers come after them.</p>`, { color: "var(--navy)" });
+  },
+  tie(s) {
+    const q = s.q;
+    let inner = `<p class="prompt long">${esc(q.prompt)}</p>`;
+    if (state.revealed) inner += answerBlock("Answer:", q.answer, q.why);
+    return card(`Tiebreaker ${q.id}`, inner, { color: "var(--navy)" });
+  }
+};
+const HAS_REVEAL = new Set(["q", "hard", "prompt", "disc", "ruler", "tie"]);
+
+/* ---------- render ---------- */
+function render() {
+  const s = S[state.i];
+  $("stage").innerHTML = R[s.kind](s);
+  $("where").textContent = s.where;
+  $("count").textContent = `${state.i + 1} / ${S.length}`;
+  $("prev").disabled = state.i === 0;
+  $("next").disabled = state.i === S.length - 1;
+  const canReveal = HAS_REVEAL.has(s.kind);
+  $("revealBtn").disabled = !canReveal;
+  $("revealBtn").textContent = s.kind === "disc" ? (state.revealed ? "Hide hint" : "Show hint") : (state.revealed ? "Hide answer" : "Show answer");
+  const timed = ["q", "hard", "prompt", "tie"].includes(s.kind);
+  $("timerBtn").disabled = !timed;
+  if (!state.timer) $("timerBtn").textContent = `Start ${s.kind === "hard" || s.kind === "prompt" ? 30 : 20}s timer`;
+  renderChips();
+  wire();
+}
+function renderChips() {
+  const t = state.ruler ? team(state.ruler) : null;
+  $("rulerDot").style.background = t ? t.color : "var(--line)";
+  $("rulerText").textContent = t ? `Ruling Class: Team ${t.id}, ${t.name}` : "No Ruling Class yet";
+  const rc = $("ruleChip");
+  rc.hidden = !state.rule;
+  rc.textContent = state.rule ? `Rule: ${state.rule}` : "";
+}
+function wire() {
+  document.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => go(+b.dataset.go));
+  document.querySelectorAll("[data-ruler]").forEach((b) => b.onclick = () => { state.ruler = +b.dataset.ruler; render(); });
+  document.querySelectorAll("[data-rule]").forEach((b) => b.onclick = () => { state.rule = b.dataset.rule; render(); });
+  document.querySelectorAll("[data-ending]").forEach((b) => b.onclick = () => { state.ending = b.dataset.ending; render(); });
+  const lower = $("lower"), reset = $("resetWage");
+  if (lower) lower.onclick = () => { state.wage = Math.max(0, state.wage - 1); render(); };
+  if (reset) reset.onclick = () => { state.wage = 3; render(); };
+}
+function go(i) {
+  if (i < 0 || i >= S.length) return;
+  stopTimer();
+  state.i = i; state.revealed = false; state.wage = 3;
+  render();
+  $("stage").scrollTop = 0;
+}
+function reveal() {
+  if (!HAS_REVEAL.has(S[state.i].kind)) return;
+  state.revealed = !state.revealed;
+  render();
+}
+
+/* ---------- timer + 3-2-1 ---------- */
+function stopTimer() {
+  if (state.timer) clearInterval(state.timer);
+  state.timer = null;
+  $("timerFill").style.width = "0";
+  $("countdown").hidden = true;
+}
+function showCount(content, isMsg) {
+  const cd = $("countdown");
+  cd.hidden = false;
+  $("cdInner").innerHTML = `<div class="${isMsg ? "msg" : "big"} pop">${esc(content)}</div>`;
+}
+function startTimer() {
+  const s = S[state.i];
+  if (state.timer) { stopTimer(); render(); return; }
+  const secs = s.kind === "hard" || s.kind === "prompt" ? 30 : 20;
+  const end = Date.now() + secs * 1000;
+  let shown = null;
+  state.timer = setInterval(() => {
+    const left = end - Date.now();
+    $("timerFill").style.width = `${Math.max(0, left / (secs * 1000)) * 100}%`;
+    const sec = Math.ceil(left / 1000);
+    $("timerBtn").textContent = `Stop timer (${Math.max(0, sec)}s)`;
+    if (left > 0 && sec <= 3 && shown !== sec) { shown = sec; showCount(String(sec), false); }
+    if (left <= 0) {
+      clearInterval(state.timer); state.timer = null;
+      const msg = s.kind === "q" || s.kind === "tie" ? "Hold up your answers!" : "Time\u2019s up!";
+      showCount(msg, true);
+      setTimeout(() => { $("countdown").hidden = true; $("timerFill").style.width = "0"; render(); }, 1600);
+    }
+  }, 100);
+}
+
+/* ---------- menu ---------- */
+function openMenu() {
+  $("menuList").innerHTML = S.map((s, i) => s.menu ? `<button class="jump" type="button" data-jump="${i}">${esc(s.menu)}</button>` : "").join("");
+  document.querySelectorAll("[data-jump]").forEach((b) => b.onclick = () => { closeMenu(); go(+b.dataset.jump); });
+  $("menu").hidden = false;
+  const first = $("menuList").querySelector("button");
+  if (first) first.focus();
+}
+function closeMenu() { $("menu").hidden = true; $("menuBtn").focus(); }
+
+/* ---------- theme ---------- */
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  root.dataset.theme = current === "dark" ? "light" : "dark";
+}
+
+/* ---------- events ---------- */
+$("next").onclick = () => go(state.i + 1);
+$("prev").onclick = () => go(state.i - 1);
+$("revealBtn").onclick = reveal;
+$("timerBtn").onclick = startTimer;
+$("home").onclick = () => go(0);
+$("menuBtn").onclick = openMenu;
+$("menuClose").onclick = closeMenu;
+$("menu").onclick = (e) => { if (e.target === $("menu")) closeMenu(); };
+$("rulerChip").onclick = () => go(S.findIndex((s) => s.kind === "ruler"));
+$("themeBtn").onclick = toggleTheme;
+document.addEventListener("keydown", (e) => {
+  if (!$("menu").hidden) { if (e.key === "Escape") closeMenu(); return; }
+  if (e.target.closest && e.target.closest("button") && (e.key === " " || e.key === "Enter")) return;
+  if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); go(state.i + 1); }
+  else if (e.key === "ArrowLeft") go(state.i - 1);
+  else if (e.key.toLowerCase() === "a") reveal();
+  else if (e.key.toLowerCase() === "t") { if (!$("timerBtn").disabled) startTimer(); }
+  else if (e.key.toLowerCase() === "m") openMenu();
+});
+render();
+</script>
+</body>
+</html>
